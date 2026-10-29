@@ -161,18 +161,17 @@ class WorkingFilePathResource(MethodView, ArgsMixin):
         """
         Generate working file path
         """
-        (
-            name,
-            mode,
-            software_id,
-            comment,
-            revision,
-            separator,
-        ) = self.get_arguments()
-
         try:
             task = tasks_service.get_task(task_id)
             permissions_service.check_working_file_access(task_id)
+            (
+                name,
+                mode,
+                software_id,
+                comment,
+                revision,
+                separator,
+            ) = self.get_arguments()
 
             software = files_service.get_software(software_id)
             is_revision_set_by_user = revision != 0

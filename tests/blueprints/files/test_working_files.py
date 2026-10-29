@@ -2,6 +2,7 @@ import datetime
 
 from tests.base import ApiDBTestCase
 
+from zou.app.models.software import Software
 from zou.app.models.task import Task
 from zou.app.services import projects_service
 
@@ -306,6 +307,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
         )
         self.log_in_cg_artist()
 
+        three_ds_max_count = Software.query.filter_by(name="3ds Max").count()
         self.get(
             f"/data/tasks/{self.task_id}/working-files", 403
         )
@@ -314,6 +316,15 @@ class WorkingFilesTestCase(ApiDBTestCase):
         )
         self.get(f"/data/entities/{self.asset.id}/working-files", 403)
         self.get(f"/data/working-files?entity_id={self.asset.id}", 403)
+        self.post(
+            f"/data/tasks/{self.task_id}/working-file-path",
+            {"name": "unauthorized"},
+            403,
+        )
+        self.assertEqual(
+            Software.query.filter_by(name="3ds Max").count(),
+            three_ds_max_count,
+        )
         self.post(
             f"/data/tasks/{self.task_id}/working-files/new",
             {"name": "main", "description": "description test"},
