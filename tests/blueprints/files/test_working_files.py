@@ -342,6 +342,44 @@ class WorkingFilesTestCase(ApiDBTestCase):
             403,
         )
 
+    def test_project_manager_can_read_but_cannot_submit_working_files(self):
+        self.generate_fixture_user_manager()
+        projects_service.add_team_member(
+            self.project_id, self.user_manager["id"]
+        )
+        self.log_in_manager()
+
+        self.assertEqual(
+            self.get(f"/data/tasks/{self.task_id}/working-files"), []
+        )
+        self.post(
+            f"/data/tasks/{self.task_id}/working-files/new",
+            {"name": "main", "description": "description test"},
+            403,
+        )
+
+    def test_supervisor_without_task_assignment_is_denied(self):
+        self.generate_fixture_user_supervisor()
+        projects_service.add_team_member(
+            self.project_id, self.user_supervisor["id"]
+        )
+        self.log_in_supervisor()
+
+        self.get(f"/data/tasks/{self.task_id}/working-files", 403)
+        self.post(
+            f"/data/tasks/{self.task_id}/working-files/new",
+            {"name": "main", "description": "description test"},
+            403,
+        )
+
+    def test_admin_can_read_but_cannot_submit_working_files(self):
+        self.get(f"/data/tasks/{self.task_id}/working-files")
+        self.post(
+            f"/data/tasks/{self.task_id}/working-files/new",
+            {"name": "main", "description": "description test"},
+            403,
+        )
+
     def test_assigned_artist_can_read_and_create_without_auto_assignment(
         self,
     ):
