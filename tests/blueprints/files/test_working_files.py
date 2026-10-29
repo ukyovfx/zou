@@ -477,7 +477,11 @@ class WorkingFilesTestCase(ApiDBTestCase):
         )
         self.post(
             f"/data/tasks/{self.task_id}/working-files/new",
-            {"name": "main", "description": "description test"},
+            {
+                "name": "main",
+                "description": "description test",
+                "person_id": self.user_cg_artist["id"],
+            },
         )
         self.assertEqual(len(Task.get(self.task_id).assignees), 2)
 
