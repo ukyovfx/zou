@@ -401,7 +401,21 @@ class WorkingFilesTestCase(ApiDBTestCase):
     def test_assigned_supervisor_can_read_but_cannot_write_working_files(
         self,
     ):
+        import os
+
         working_file = self.generate_fixture_working_file()
+        self.generate_fixture_user_cg_artist()
+        projects_service.add_team_member(
+            self.project_id, self.user_cg_artist["id"]
+        )
+        self.assign_task(self.task_id, self.user_cg_artist["id"])
+        self.log_in_cg_artist()
+        fixture = self.get_fixture_file_path(
+            os.path.join("thumbnails", "th01.png")
+        )
+        file_path = f"/data/working-files/{working_file.id}/file"
+        self.upload_file(file_path, fixture)
+
         self.generate_fixture_user_supervisor()
         projects_service.add_team_member(
             self.project_id, self.user_supervisor["id"]
@@ -411,7 +425,10 @@ class WorkingFilesTestCase(ApiDBTestCase):
 
         self.get(f"/data/tasks/{self.task_id}/working-files")
         self.get(f"/data/working-files/{working_file.id}")
-        self.get(f"/data/working-files/{working_file.id}/file", 404)
+        response = self.app.get(file_path, headers=self.base_headers)
+        self.assertEqual(response.status_code, 200)
+        with open(fixture, "rb") as file_handle:
+            self.assertEqual(response.data, file_handle.read())
         self.put(
             f"/data/working-files/{working_file.id}",
             {"comment": "supervisor write denied"},
