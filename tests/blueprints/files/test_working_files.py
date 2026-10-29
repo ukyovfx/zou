@@ -323,6 +323,15 @@ class WorkingFilesTestCase(ApiDBTestCase):
             [str(person.id) for person in Task.get(self.task_id).assignees],
         )
 
+    def assert_working_file_upload_denied(self):
+        import os
+
+        fixture = self.get_fixture_file_path(
+            os.path.join("thumbnails", "th01.png")
+        )
+        path = f"/data/working-files/{self.working_file.id}/file"
+        self.upload_file(path, fixture, 403)
+
     def test_client_cannot_read_or_submit_working_files(self):
         self.generate_fixture_user_client()
         projects_service.add_team_member(
@@ -341,6 +350,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
             {"name": "main", "description": "description test"},
             403,
         )
+        self.assert_working_file_upload_denied()
 
     def test_project_manager_can_read_but_cannot_submit_working_files(self):
         self.generate_fixture_user_manager()
@@ -357,6 +367,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
             {"name": "main", "description": "description test"},
             403,
         )
+        self.assert_working_file_upload_denied()
 
     def test_supervisor_without_task_assignment_is_denied(self):
         self.generate_fixture_user_supervisor()
@@ -371,6 +382,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
             {"name": "main", "description": "description test"},
             403,
         )
+        self.assert_working_file_upload_denied()
 
     def test_admin_can_read_but_cannot_submit_working_files(self):
         self.get(f"/data/tasks/{self.task_id}/working-files")
@@ -379,6 +391,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
             {"name": "main", "description": "description test"},
             403,
         )
+        self.assert_working_file_upload_denied()
 
     def test_assigned_artist_can_read_and_create_without_auto_assignment(
         self,
