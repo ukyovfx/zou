@@ -313,6 +313,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
             f"/data/tasks/{self.task_id}/working-files/last-revisions", 403
         )
         self.get(f"/data/entities/{self.asset.id}/working-files", 403)
+        self.get(f"/data/working-files?entity_id={self.asset.id}", 403)
         self.post(
             f"/data/tasks/{self.task_id}/working-files/new",
             {"name": "main", "description": "description test"},
@@ -359,6 +360,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
         )
         self.log_in_manager()
 
+        self.get("/data/working-files", 403)
         self.assertEqual(
             self.get(f"/data/tasks/{self.task_id}/working-files"), []
         )
@@ -377,6 +379,7 @@ class WorkingFilesTestCase(ApiDBTestCase):
         self.log_in_supervisor()
 
         self.get(f"/data/tasks/{self.task_id}/working-files", 403)
+        self.get(f"/data/working-files?entity_id={self.asset.id}", 403)
         self.post(
             f"/data/tasks/{self.task_id}/working-files/new",
             {"name": "main", "description": "description test"},
@@ -448,6 +451,50 @@ class WorkingFilesTestCase(ApiDBTestCase):
         self.log_in_cg_artist()
 
         self.get(f"/data/files/{other_working_file.id}", 403)
+        self.get(f"/data/working-files/{other_working_file.id}", 403)
         self.get(
             f"/data/working-files/{other_working_file.id}/file", 403
         )
+
+    def test_generic_working_file_api_requires_task_assignment_scope(self):
+        working_file = self.generate_fixture_working_file()
+        self.generate_fixture_user_cg_artist()
+        projects_service.add_team_member(
+            self.project_id, self.user_cg_artist["id"]
+        )
+        self.log_in_cg_artist()
+
+        self.get("/data/working-files", 403)
+        self.get(f"/data/working-files?task_id={self.task_id}", 403)
+        self.get(f"/data/working-files/{working_file.id}", 403)
+        self.put(
+            f"/data/working-files/{working_file.id}",
+            {"comment": "unauthorized"},
+            403,
+        )
+
+        self.assign_task(self.task_id, self.user_cg_artist["id"])
+        self.get("/data/working-files", 403)
+        self.get(f"/data/working-files?task_id={self.task_id}")
+        self.get(f"/data/working-files/{working_file.id}")
+
+    def test_manager_can_query_working_files_by_entity(self):
+        self.generate_fixture_working_file()
+        self.generate_fixture_user_manager()
+        projects_service.add_team_member(
+            self.project_id, self.user_manager["id"]
+        )
+        self.log_in_manager()
+
+        self.get(f"/data/working-files?entity_id={self.asset.id}")
+
+    def test_client_cannot_query_generic_working_file_api(self):
+        self.generate_fixture_user_client()
+        projects_service.add_team_member(
+            self.project_id, self.user_client["id"]
+        )
+        self.log_in_client()
+
+        self.get("/data/working-files", 403)
+        self.get(f"/data/working-files?task_id={self.task_id}", 403)
+        self.get(f"/data/working-files/{self.working_file.id}", 403)
