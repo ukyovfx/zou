@@ -398,6 +398,32 @@ class WorkingFilesTestCase(ApiDBTestCase):
         )
         self.assert_working_file_upload_denied()
 
+    def test_assigned_supervisor_can_read_but_cannot_write_working_files(
+        self,
+    ):
+        working_file = self.generate_fixture_working_file()
+        self.generate_fixture_user_supervisor()
+        projects_service.add_team_member(
+            self.project_id, self.user_supervisor["id"]
+        )
+        self.assign_task(self.task_id, self.user_supervisor["id"])
+        self.log_in_supervisor()
+
+        self.get(f"/data/tasks/{self.task_id}/working-files")
+        self.get(f"/data/working-files/{working_file.id}")
+        self.get(f"/data/working-files/{working_file.id}/file", 404)
+        self.put(
+            f"/data/working-files/{working_file.id}",
+            {"comment": "supervisor write denied"},
+            403,
+        )
+        self.post(
+            f"/data/tasks/{self.task_id}/working-files/new",
+            {"name": "main", "description": "description test"},
+            403,
+        )
+        self.assert_working_file_upload_denied()
+
     def test_admin_can_read_but_cannot_submit_working_files(self):
         self.get(f"/data/tasks/{self.task_id}/working-files")
         self.post(
@@ -468,6 +494,11 @@ class WorkingFilesTestCase(ApiDBTestCase):
 
         self.get(f"/data/files/{other_working_file.id}", 403)
         self.get(f"/data/working-files/{other_working_file.id}", 403)
+        self.put(
+            f"/data/working-files/{other_working_file.id}",
+            {"comment": "cross-task update"},
+            403,
+        )
         self.get(
             f"/data/working-files/{other_working_file.id}/file", 403
         )
