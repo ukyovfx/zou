@@ -2,9 +2,10 @@ Get working files
 ---
 tags:
   - Crud
-description: Retrieve all working files. Supports filtering via
-  query parameters and pagination. Vendor access is blocked.
-  Includes project permission filtering for non-admin users.
+description: Retrieve WorkingFiles with authorization scope. Non-admin users
+  must provide task_id or entity_id. task_id allows assigned artists and
+  project managers to query that task; entity_id allows project managers to
+  query that entity. Unscoped queries are available only to administrators.
 parameters:
   - in: query
     name: page
@@ -28,6 +29,20 @@ parameters:
     default: false
     example: false
     description: Whether to include relations
+  - in: query
+    name: task_id
+    required: false
+    schema:
+      type: string
+      format: uuid
+    description: Scope the result to a task the current user may access
+  - in: query
+    name: entity_id
+    required: false
+    schema:
+      type: string
+      format: uuid
+    description: Scope the result to an entity available to a project manager
 responses:
     200:
       description: Working files retrieved successfully

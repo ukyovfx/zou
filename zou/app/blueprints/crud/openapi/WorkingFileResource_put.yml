@@ -2,9 +2,8 @@ Update working file
 ---
 tags:
   - Crud
-description: Update a working file with data provided in the
-  request body. JSON format is expected. Requires task action
-  access.
+description: Update a WorkingFile with JSON data. Only an Artist assigned to
+  its task may update it; managers and administrators have read access only.
 parameters:
   - in: path
     name: instance_id

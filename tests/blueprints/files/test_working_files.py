@@ -394,6 +394,11 @@ class WorkingFilesTestCase(ApiDBTestCase):
             {"name": "main", "description": "description test"},
             403,
         )
+        self.post(
+            "/data/working-files",
+            {"task_id": self.task_id, "entity_id": self.asset.id},
+            403,
+        )
         self.assert_working_file_upload_denied()
 
     def test_assigned_artist_can_read_and_create_without_auto_assignment(

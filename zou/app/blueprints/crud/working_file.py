@@ -48,6 +48,12 @@ class WorkingFilesResource(BaseModelsResource):
         """
         return super().get()
 
+    def check_create_permissions(self, data):
+        """
+        Require the task-scoped action to create a WorkingFile revision.
+        """
+        raise permissions.PermissionDenied
+
     @jwt_required()
     @swag_from("openapi/WorkingFilesResource_post.yml")
     def post(self):
